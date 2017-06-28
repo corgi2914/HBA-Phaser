@@ -15,32 +15,49 @@ function preload(){
     game.load.image('grass:1x1', 'images/grass_1x1.png');
     game.load.image('grass:1x1', 'images/grass_1x1.png');
     game.load.image('hero', 'images/hero_stopped.png');
+    game.load.audio('sfx:jump', 'audio/jump.wav');
 };
 
 function create(){
 	game.add.image(0, 0, 'background');
 	loadLevel(this.game.cache.getJSON('level:1'));
-	 //This sets the left and right keys as inputs for this game
     leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
     rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
     upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
     upKey.onDown.add(function(){
-    jump();
+    	jump()
     });
-}
+    sfxJump = game.add.audio('sfx:jump');
+};
+
 function jump(){
-	hero.body.velocity.y = -600;
-}
+	var canJump = hero.body.touching.down;
+	if (canJump) {
+		hero.body.velocity.y = -600;
+	return canJump
+};
 
 function update(){
 	handleInput();
 	handleCollisions();
+    handleInput();
 };
 
 function handleCollisions(){
 	game.physics.arcade.collide(hero, platforms);
 };
 
+function handleInput() {
+	if (leftKey.isDown) { // move hero left
+		move(-1);
+	}
+	else if (rightKey.isDown) { // move hero right
+	    move(1)
+	}
+	else { // stop
+		move(0);
+	}
+};
 
 function move(direction){
 	hero.body.velocity.x = direction * 200;
@@ -53,15 +70,13 @@ function move(direction){
 }
 
 function loadLevel(data) {
-    platforms = game.add.group();
+	platforms = game.add.group();
 data.platforms.forEach(spawnPlatform, this);
   spawnCharacters({hero: data.hero});
-   // game.physics.arcade.y = 1200;
   // create all the groups/layers that we need
+    
     //Make sure this line of code is after!
       game.physics.arcade.y = 1200;
-
-
 };
 
 function spawnCharacters (data) {
@@ -79,20 +94,6 @@ function spawnPlatform(platform) {
 	sprite.body.allowGravity = false;
 	sprite.body.immovable = true;
 };
-function handleInput() {
-	if (leftKey.isDown) { // move hero left
-		move(-1);
-	}
-	else if (rightKey.isDown) { // move hero right
-	    move(1)
-	}
-	else { // stop
-		move(0);
-	}
-};
-function handleCollisions(){
-	game.physics.arcade.collide(hero, platforms);
-};
 
 //Create a game state
-var game = new Phaser.Game(960, 600, Phaser.AUTO, 'game', {init: init, preload: preload, create: create, update: update});
+var game = new Phaser.Game(960, 600, Phaser.CANVAS, 'game', {init: init, preload: preload, create: create, update: update})};
