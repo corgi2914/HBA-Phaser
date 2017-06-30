@@ -23,17 +23,12 @@ function preload(){
 
     // load the hero image
     game.load.image('hero', 'images/hero_stopped.png');
-    //game.load.image('grass:1x1', 'images/grass_1x1.png');
-
-    //Play a sound effect when jumping
-    game.load.audio('sfx:jump', 'audio/jump.wav');
-    // ...
-    game.load.spritesheet('coin', 'images/coin_animated.png', 22, 22);
-
+    game.load.audio('sfx:jump', 'audio/jump.wav'); 
     game.load.audio('sfx:coin', 'audio/coin.wav');
-    // ...
+    game.load.spritesheet('coin', 'images/coin_animated.png', 22, 22);
     game.load.spritesheet('spider', 'images/spider.png', 42, 32);
     game.load.image('invisible-wall', 'images/invisible_wall.png');
+
 
 };
 
@@ -58,22 +53,20 @@ function create(){
 function update(){
     handleInput();
     handleCollisions();
+    moveSpider();
 }
 
 function loadLevel(data) {
-    platforms = game.add.group();
-    // spawn all platforms
+    platforms = game.add.group();    
     data.platforms.forEach(spawnPlatform, this);
-    // game.add.image(0, 0, 'background');
+    game.add.image(0, 0, 'background');
     coins = game.add.group();
     // ? - Add a group to the game and set it to the value of 'coins'
     spiders = game.add.group();
-    // ...
-    enemyWalls = game.add.group();
-
+    enemyWalls =  game.add.group();
     spawnCharacters({hero: data.hero, spiders: data.spiders});  
     // spawn important objects
-    game.physics.arcade.collide(spiders, enemyWalls);
+     data.coins.forEach(spawnCoin, this);
     // ...
 
     // spawn hero and enemies
@@ -155,10 +148,9 @@ function handleCollisions(){
     game.physics.arcade.overlap(hero, coins, onHeroVsCoin, null);
     
     game.physics.arcade.collide(spiders, platforms);
-    // ? - Set the collision between spiders and platforms
-    // ...
-    //enemyWalls = game.add.group();
-    //enemyWalls(visibility = false);
+    game.physics.arcade.collide(spiders, enemyWalls);
+    // ... 
+    game.physics.arcade.overlap(hero, spiders, onHeroVsEnemy, null);
 };
 
 function jump(){
@@ -196,6 +188,27 @@ function spawnEnemyWall(x, y, side){
     sprite.body.immovable = true;
     sprite.body.allowGravity = false;
 }
+
+function die(spider) {
+    spider.body.enable = false;
+    spider.animations.play('die');
+    spider.animation.play('die').onComplete.addOnce(function () {
+        spider.kill();
+    });
+}
+
+function onHeroVsEnemy(hero, enemy) {
+     if (hero.body.velocity.y > 0) {
+      hero.body.velocity.y = -200;
+        die(enemy);
+        sfxStomp.play();
+    }
+    else {
+        sfxStomp.play();
+        game.state.restart();
+    }
+};
+
 
 //Create a game state
 var game = new Phaser.Game(960, 600, Phaser.AUTO, 'game', {init: init, preload: preload, create: create, update: update});
