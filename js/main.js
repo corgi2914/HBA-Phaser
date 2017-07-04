@@ -1,15 +1,19 @@
 var coinPickupCount = 0;
+var hasKey = false;
+var level = 0;
 
-function init(){
-//Make hero sprite more focused when moving around
+function init() {
+    //Make hero sprite more focused when moving around
     game.renderer.renderSession.roundPixels = true;
 }
 
-function preload(){
-  game.load.image('background', 'images/background.png');
-  // game.load.image('background', 'images/background.png');
-  game.load.json('level:1', 'data/level01.json'); 
-  // ...
+function preload() {
+    game.load.image('background', 'images/background.png');
+    // game.load.image('background', 'images/background.png');
+    game.load.json('level:1', 'data/level01.json');
+    game.load.json('level:0', 'data/level01.json');
+
+    // ...
     // game.load.json('level:1', 'data/level01.json');
     //spawn platform sprites
     game.load.image('ground', 'images/ground.png');
@@ -25,6 +29,9 @@ function preload(){
 
     // load the hero image
     game.load.image('hero', 'images/hero_stopped.png');
+
+    //game.load.spritesheet('hero', 'images/hero.png', 36, 42);
+
     //game.load.image('grass:1x1', 'images/grass_1x1.png');
 
     //Play a sound effect when jumping
@@ -59,18 +66,23 @@ function preload(){
     game.load.spritesheet('door', 'images/door.png', 42, 66);
     // ...
     game.load.image('key', 'images/key.png');
+        game.load.audio('sfx:door', 'audio/door.wav');
+    game.load.audio('sfx:key', 'audio/key.wav');
+
+
+
 
 };
 
-function create(){
-	game.add.image(0, 0, 'background');
-  // game.add.image(0, 0, 'background');
-  loadLevel(this.game.cache.getJSON('level:1'));
-  //This sets the left and right keys as inputs for this game
+function create() {
+    game.add.image(0, 0, 'background');
+    // game.add.image(0, 0, 'background');
+    loadLevel(this.game.cache.getJSON('level:0'));
+    //This sets the left and right keys as inputs for this game
     leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
     rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
     upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
-    upKey.onDown.add(function(){
+    upKey.onDown.add(function() {
         jump();
     });
     // game.add.image(0, 0, 'background');
@@ -97,13 +109,20 @@ function create(){
 
     // ...
     hud.add(coinScoreImg);
-  
+ sfxKey = game.add.audio('sfx:key');
+    sfxDoor = game.add.audio('sfx:door');
 }
 
-function update(){
+}
+
+function update() {
     handleInput();
     handleCollisions();
     moveSpider();
+    //var animationName = getAnimationName();
+    //if (hero.animations.name !== animationName) {
+    // hero.animations.play(animationName);
+    //}
 }
 
 function loadLevel(data) {
@@ -116,7 +135,10 @@ function loadLevel(data) {
     spiders = game.add.group();
     // ...
 
-    spawnCharacters({hero: data.hero, spiders: data.spiders});  
+    spawnCharacters({
+        hero: data.hero,
+        spiders: data.spiders
+    });
     // spawn important objects
     data.coins.forEach(spawnCoin, this);
 
@@ -140,10 +162,10 @@ function loadLevel(data) {
     // spawnDoor(data.door.x, data.door.y);
     spawnKey(data.key.x, data.key.y);
     // ...
-    
+
 };
 
-function spawnCharacters (data) {
+function spawnCharacters(data) {
     // spawn hero
     hero = game.add.sprite(data.hero.x, data.hero.y, 'hero');
     // spawn hero
@@ -157,7 +179,7 @@ function spawnCharacters (data) {
     hero.body.collideWorldBounds = true;
 
     // ...
-    data.spiders.forEach(function (spider){
+    data.spiders.forEach(function(spider) {
         var sprite = game.add.sprite(spider.x, spider.y, 'spider');
         spiders.add(sprite);
         sprite.anchor.set(0.5);
@@ -169,6 +191,13 @@ function spawnCharacters (data) {
         sprite.body.collideWorldBounds = true;
         sprite.body.velocity.x = 100
         // ? - Set the sprite.body.velocity.x to value 100
+        // hero = game.add.sprite(data.hero.x, data.hero.y, 'hero');
+        //hero.anchor.set(0.5, 0.5);
+
+        //hero.animations.add('stop', [0]);
+        //hero.animations.add('run', [1, 2], 8, true); // 8fps looped
+        //hero.animations.add('jump', [3]);
+        //hero.animations.add('fall', [4]);
     })
 
 };
@@ -182,49 +211,53 @@ function spawnPlatform(platform) {
     sprite.body.allowGravity = false;
     // sprite.body.allowGravity = false;
     sprite.body.immovable = true;
-     // ...
+    // ...
     spawnEnemyWall(platform.x, platform.y, 'left');
     spawnEnemyWall(platform.x + sprite.width, platform.y, 'right');
 };
 
-function move(direction){
+function move(direction) {
     hero.body.velocity.x = direction * 200;
-    // hero.body.velocity.x = direction * 200;
     if (hero.body.velocity.x < 0) {
         hero.scale.x = -1;
-    }
-    else if (hero.body.velocity.x > 1) {
-        hero.scale.x= 1
+    } else if (hero.body.velocity.x > 1) {
+        hero.scale.x = 1
     }
 }
 
-function handleInput(){
+function handleInput() {
     if (leftKey.isDown) { // move hero left
         move(-1);
-    }
-    else if (rightKey.isDown) { // move hero right
+    } else if (rightKey.isDown) { // move hero right
         move(1);
-    }
-    else { // stop
+    } else { // stop
         move(0);
     }
 }
 
-function handleCollisions(){
+function handleCollisions() {
     game.physics.arcade.collide(hero, platforms);
     //...
     game.physics.arcade.overlap(hero, coins, onHeroVsCoin, null);
-    
+
     game.physics.arcade.collide(spiders, platforms);
     // ? - Set the collision between spiders and platforms
     game.physics.arcade.collide(spiders, enemyWalls);
     // ...
     // ...
     game.physics.arcade.overlap(hero, spiders, onHeroVsEnemy, null);
+    game.physics.arcade.overlap(hero, door, onHeroVsDoor, null);
+    game.physics.arcade.overlap(hero, key, onHeroVsKey, null);
+
+    game.physics.arcade.overlap(hero, door, onHeroVsDoor,
+        function(hero, door) {
+            return hasKey && hero.body.touching.down;
+        });
+
 };
 
-function jump(){
-var canJump = hero.body.touching.down;
+function jump() {
+    var canJump = hero.body.touching.down;
     //Ensures hero is on the ground or on a platform
     if (canJump) {
         hero.body.velocity.y = -600;
@@ -245,7 +278,7 @@ function spawnCoin(coin) {
     sprite.body.allowGravity = false;
 };
 
-function onHeroVsCoin(hero, coin){
+function onHeroVsCoin(hero, coin) {
     coinPickupCount++;
     coin.kill();
     sfxCoin.play();
@@ -254,7 +287,7 @@ function onHeroVsCoin(hero, coin){
     // ...
 };
 
-function spawnEnemyWall(x, y, side){
+function spawnEnemyWall(x, y, side) {
     var sprite = enemyWalls.create(x, y, 'invisible-wall');
     sprite.anchor.set(side === 'left' ? 1 : 0, 1);
     game.physics.enable(sprite);
@@ -262,12 +295,11 @@ function spawnEnemyWall(x, y, side){
     sprite.body.allowGravity = false;
 }
 
-function moveSpider(){
-    spiders.forEach(function (spider){
+function moveSpider() {
+    spiders.forEach(function(spider) {
         if (spider.body.touching.right || spider.body.blocked.right) {
             spider.body.velocity.x = -100; // turn left
-        }
-        else if (spider.body.touching.left || spider.body.blocked.left) {
+        } else if (spider.body.touching.left || spider.body.blocked.left) {
             spider.body.velocity.x = 100;
             // ? - Change spiders velocity to turn right
         }
@@ -279,22 +311,21 @@ function onHeroVsEnemy(hero, enemy) {
         hero.body.velocity.y = -200;
         die(enemy);
         sfxStomp.play();
-    }
-    else { // game over -> restart the game
+    } else { // game over -> restart the game
         sfxStomp.play();
         game.state.restart();
     }
- };
+};
 
-function die(spider){
+function die(spider) {
     spider.body.enable = false;
     spider.animations.play('die');
-    spider.animations.play('die').onComplete.addOnce(function () {
+    spider.animations.play('die').onComplete.addOnce(function() {
         spider.kill();
     });
 }
 
-function spawnSpider(){
+function spawnSpider() {
     spider = spiders.create(spider.x, spider.y, 'spider');
     spider.anchor.set(0.5);
     spider.animations.add('crawl', [0, 1, 2], 8, true);
@@ -307,6 +338,61 @@ function spawnSpider(){
     spider.body.velocity.x = Spider.speed;
 }
 
+function spawnDoor(x, y) {
+    door = bgDecoration.create(x, y, 'door');
+    door.anchor.setTo(0.5, 1);
+    game.physics.enable(door);
+    door.body.allowGravity = false;
+}
+
+function spawnKey(x, y) {
+    key = bgDecoration.create(x, y, 'key');
+    key.anchor.set(0.5, 0.5);
+    game.physics.enable(key);
+    key.body.allowGravity = false;
+}
+
+function getAnimationName() {
+    var name = 'stop';
+    // jumping
+    if (hero.body.velocity.y < 0) {
+        name = 'jump';
+    }
+    // falling
+    else if (hero.body.velocity.y >= 0 && !hero.body.touching.down) {
+        name = 'fall';
+    } else if (hero.body.velocity.x !== 0 && hero.body.touching.down) {
+        name = 'run';
+    }
+    return name;
+}
+
+function onHeroVsKey(hero, key) {
+    sfxkey.play();
+    key.kill();
+    var hasKey = true;
+}
+
+function spawnKey(x,y){
+     key = bgDecoration.create(x, y, 'key');
+    key.anchor.set(0.5, 0.5);
+    game.physics.enable(key);
+    key.body.allowGravity = false;
+};
+
+
+
+// game.oad.spritesheet
+function onHeroVsDoor(hero, door) {
+    sfxDoor.play();
+    if (level === 0) {
+        level = level + 1;
+    } else {
+        level = 0;
+    }
+    game.state.restart();
+}
+
 function spawnDoor(x, y){
     door = bgDecoration.create(x, y, 'door');
     door.anchor.setTo(0.5, 1);
@@ -314,12 +400,10 @@ function spawnDoor(x, y){
     door.body.allowGravity = false;
 }
 
-function spawnKey(x, y){
-    key = bgDecoration.create(x, y, 'key');
-    key.anchor.set(0.5, 0.5);
-    game.physics.enable(key);
-    key.body.allowGravity = false;
-}
-
 //Create a game state
-var game = new Phaser.Game(960, 600, Phaser.AUTO, 'game', {init: init, preload: preload, create: create, update: update});
+var game = new Phaser.Game(960, 600, Phaser.AUTO, 'game', {
+init: init,
+preload: preload,
+create: create,
+update: update
+});
