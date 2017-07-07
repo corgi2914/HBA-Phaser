@@ -1,5 +1,6 @@
 var coinPickupCount = 0;
-
+var level = 0;
+var hasKey = false;
 function init() {
 
 }
@@ -19,7 +20,7 @@ function preload() {
     game.load.image('grass:1x1', 'images/grass_1x1.png');
 
     // load the hero image
-    game.load.image('hero', 'images/hero_doggy.gif');
+    game.load.image('hero', 'images/DOGGIE_TRANSPARENT.png');
     game.load.audio('sfx:jump', 'audio/jump.wav');
     game.load.audio('sfx:coin', 'audio/coin.wav');
     game.load.audio('sfx:stomp', 'audio/stomp.wav');
@@ -29,7 +30,7 @@ function preload() {
     game.load.image('icon:coin', 'images/coin_icon.png');
     game.load.image('font:numbers', 'images/numbers.png');
     game.load.spritesheet('door', 'images/door.png', 42, 66);
-    game.load.image('key', 'images/key2.png');
+    game.load.image('key', 'images/key2.png.gif');
     game.load.spritesheet('icon:key', 'images/key_icon.png', 34, 30);
     game.load.audio('sfx:key', 'audio/key.wav');
     game.load.audio('sfx:door', 'audio/door.wav');
@@ -112,8 +113,8 @@ function spawnPlatform(platform) {
     sprite.body.immovable = true;
 };
 
-function spawnCharacters(data) {
-    // spawn hero
+function spawnCharacters(data){
+    // spawn hero 
     hero = game.add.sprite(data.hero.x, data.hero.y, 'hero');
     hero.anchor.set(0.5, 0.5);
     //Make the main character use the physics engine for movement
@@ -159,11 +160,11 @@ function handleCollisions() {
     game.physics.arcade.collide(spiders, enemyWalls);
     game.physics.arcade.overlap(hero, coins, onHeroVsCoin, null);
     game.physics.arcade.overlap(hero, spiders, onHeroVsEnemy, null);
-    game.physics.arcade.overlap(hero, key, onHeroVsKey, null);
+    game.physics.arcade.overlap(hero, key, onHeroVsKey, null, this);
     game.physics.arcade.overlap(hero, door, onHeroVsDoor,
         // ignore if there is no key or the player is on air
         function (hero, door) {
-            //return hasKey && hero.body.touching.down;
+            return hasKey && hero.body.touching.down;
         });
 
 };
