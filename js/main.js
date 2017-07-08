@@ -49,7 +49,6 @@ function create(){
     coinIcon = game.make.image(40, 0, 'icon:coin');
     //loadLevel(this.game.cache.getJSON('level:2'));
     loadLevel(this.game.cache.getJSON('level:' + level));
-    loadLevel(this.game.cache.getJSON('level:2:'));
     leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
     rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
     upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
